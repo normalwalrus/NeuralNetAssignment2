@@ -1,5 +1,7 @@
 import torch
 from torch.autograd import Variable
+from torchvision import transforms
+from torch.utils.data import Dataset
 
 def output_label(label):
     output_mapping = {0: "T-shirt/Top",
@@ -68,3 +70,28 @@ def test_loop(test_loader, model, loss_fn, device):
     test_correct /= size
     
     return test_loss, test_correct
+
+class FashionMnist_Dataset(Dataset):
+    def __init__(self, data, normalise = True) -> None:
+        super().__init__()
+
+        self.data = data
+        self.normalise = normalise
+        self.image_transform = transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                ])
+
+    
+    def __len__(self):
+        #2 times since we only have positive examples and every alternate example is negative
+        return len(self.data)
+
+    def __getitem__(self, index):
+
+        tensor, label = self.data[index]
+        if self.normalise:
+            tensor = self.image_transform(tensor)
+
+        return tensor, label

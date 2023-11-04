@@ -26,22 +26,64 @@ class ResNet_pretrained(nn.Module):
     return self.model(x)
   
 class vgg16_pretrained(nn.Module):
-  def __init__(self, in_channels=1, train_last_layer_only = False):
+  def __init__(self, train_last_layer_only = False):
     super(vgg16_pretrained, self).__init__()
     self.model = models.vgg16(pretrained = True)
     
     if train_last_layer_only:
+      self.model.eval()
       for param in self.model.parameters():
         param.requires_grad = False
 
-    first_conv_layer = [nn.Conv2d(in_channels, 3, kernel_size=3, stride=1, padding=1, dilation=1, groups=1, bias=True)]
-    first_conv_layer.extend(list(self.model.features))  
-    self.model.features= nn.Sequential(*first_conv_layer )  
-    
     self.layer1 = nn.Linear(1000,10)
 
   def forward(self, x):
 
     output = self.model(x)
     output = self.layer1(output)
+    return output
+  
+
+
+class alexNet_pretrained(nn.Module):
+  def __init__(self, train_last_layer_only = False):
+    super(alexNet_pretrained, self).__init__()
+    self.model = torch.hub.load('pytorch/vision:v0.10.0', 'alexnet', pretrained=True)
+
+    if train_last_layer_only:
+      self.model.eval()
+
+      for param in self.model.parameters():
+            param.requires_grad = False
+
+    self.final_fc = nn.Linear(in_features=1000, out_features=10)
+
+
+  def forward(self, x):
+
+    output = self.model(x)
+    output = self.final_fc(output)
+
+    return output
+
+
+class googleNet_pretrained(nn.Module):
+  def __init__(self, train_last_layer_only = False):
+    super(googleNet_pretrained, self).__init__()
+    self.model = torch.hub.load('pytorch/vision:v0.10.0', 'googlenet', pretrained=True)
+
+    if train_last_layer_only:
+      self.model.eval()
+
+      for param in self.model.parameters():
+            param.requires_grad = False
+
+    self.final_fc = nn.Linear(in_features=1000, out_features=10)
+
+
+  def forward(self, x):
+
+    output = self.model(x)
+    output = self.final_fc(output)
+
     return output
