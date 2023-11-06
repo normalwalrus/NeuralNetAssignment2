@@ -87,3 +87,24 @@ class googleNet_pretrained(nn.Module):
     output = self.final_fc(output)
 
     return output
+  
+class inceptionNet_pretrained(nn.Module):
+  def __init__(self, train_last_layer_only = False):
+    super(inceptionNet_pretrained, self).__init__()
+    self.model = torch.hub.load('pytorch/vision:v0.10.0', 'inception_v3', pretrained=True)
+
+    if train_last_layer_only:
+      self.model.eval()
+
+      for param in self.model.parameters():
+            param.requires_grad = False
+
+    self.final_fc = nn.Linear(in_features=1000, out_features=10)
+
+
+  def forward(self, x):
+
+    output = self.model(x)
+    output = self.final_fc(output)
+
+    return output
