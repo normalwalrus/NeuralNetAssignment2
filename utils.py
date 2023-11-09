@@ -2,8 +2,10 @@ import torch
 from torch.autograd import Variable
 from torchvision import transforms
 from torch.utils.data import Dataset
+from torchvision.transforms import v2
 import numpy as np
 
+#Function for mapping of label to what it represents
 def output_label(label):
     output_mapping = {0: "T-shirt/Top",
                     1: "Trouser",
@@ -18,13 +20,23 @@ def output_label(label):
     input = (label.item() if type(label) == torch.Tensor else label)
     return output_mapping[input]
 
-def train_loop(train_loader, model, loss_fn, optimizer, device):
+
+# Training loop
+def train_loop(train_loader, model, loss_fn, optimizer, device, cutmix = False):
+    if cutmix: 
+        NUM_CLASSES = 10
+        cutmix = v2.CutMix(num_classes=NUM_CLASSES)
+
     size = len(train_loader.dataset)
     num_batches = len(train_loader)
 
     train_loss, train_correct = 0, 0
 
     for images, labels in train_loader:
+
+        if cutmix:
+             images, labels = cutmix(images, labels)
+
         # Transfering images and labels to GPU if available
         images, labels = images.to(device), labels.to(device)
         
@@ -40,15 +52,25 @@ def train_loop(train_loader, model, loss_fn, optimizer, device):
         train_loss += loss.item()
 
         _, predicted = torch.max(outputs, dim=1)
+        
+        if not cutmix:
+            train_correct += (predicted == labels).type(torch.float).sum().item()
+        else:
+            # According to the original paper, prediction is considered correct
+            # if it is either of the classes used in mixup or cutmix
+            labels = labels.topk(2).indices
 
-        train_correct += (predicted == labels).type(torch.float).sum().item()
+            for i in range(len(predicted)):
+                if predicted[i] in labels[i]:
+                    train_correct += 1
+
 
     train_loss /= num_batches
     train_correct /=size
     
     return train_loss, train_correct
 
-
+# testing loop
 def test_loop(test_loader, model, loss_fn, device):
 
     size = len(test_loader.dataset)

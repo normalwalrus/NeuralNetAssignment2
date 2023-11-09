@@ -1,5 +1,7 @@
 import torch.nn as nn
 
+
+# Baseline CNN initialisation
 class CNN(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -20,10 +22,11 @@ class CNN(nn.Module):
         )
         
         self.fc1 = nn.Linear(in_features=64*6*6, out_features=600)
+        self.relu = nn.ReLU()
         self.drop = nn.Dropout2d(dropout)
-        self.fc2 = nn.Linear(in_features=600, out_features=300)
+        self.fc2 = nn.Linear(in_features=600, out_features=100)
         self.drop = nn.Dropout2d(dropout)
-        self.fc3 = nn.Linear(in_features=300, out_features=10)
+        self.fc3 = nn.Linear(in_features=100, out_features=10)
         
     def forward(self, x):
         out = self.layer1(x)
@@ -31,11 +34,14 @@ class CNN(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.fc1(out)
         out = self.drop(out)
+        out = self.relu()
         out = self.fc2(out)
+        out = self.drop(out)
+        out = self.relu()
         out = self.fc3(out)
-        
         return out
-    
+
+# Baseline CNN with no batchnorm2D
 class CNN_no_batch(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -69,7 +75,8 @@ class CNN_no_batch(nn.Module):
         out = self.fc3(out)
         
         return out
-    
+
+# Baseline CNN with no maxpooling
 class CNN_no_maxpool(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -103,7 +110,8 @@ class CNN_no_maxpool(nn.Module):
         out = self.fc3(out)
         
         return out
-    
+
+# Baseline CNN with no maxpooling and no batchnorm2D
 class CNN_no_maxpool_batchnorm(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -136,7 +144,7 @@ class CNN_no_maxpool_batchnorm(nn.Module):
         
         return out
     
-
+# Baseline CNN with varying kernel size
 class CNN_kernel_check(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -172,7 +180,8 @@ class CNN_kernel_check(nn.Module):
         out = self.fc3(out)
         
         return out
-    
+
+# Baseline CNN with varying number of conv2d layers
 class CNN_conv_layer(nn.Module):
     
     def __init__(self, dropout = 0.25, kernel_size = 3):
@@ -189,6 +198,7 @@ class CNN_conv_layer(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=kernel_size),
             nn.BatchNorm2d(64),
             nn.ReLU(),
+            #Manually change number of conv2D layers
             nn.Conv2d(in_channels=64, out_channels=64, kernel_size=kernel_size),
             nn.BatchNorm2d(64),
             nn.ReLU(),
@@ -215,7 +225,7 @@ class CNN_conv_layer(nn.Module):
         
         return out
 
-
+# Baseline CNN with varying number of FullyConnected layers
 class CNN_fully_connected(nn.Module):
     
     def __init__(self, kernel_size = 3, dropout = 0.25):
@@ -235,6 +245,7 @@ class CNN_fully_connected(nn.Module):
             nn.MaxPool2d(2)
         )
         
+        #Manually Change number of layers
         self.fc1 = nn.Linear(in_features=64*6*6, out_features=600)
         self.drop = nn.Dropout2d(dropout)
         self.fc2 = nn.Linear(in_features=600, out_features=300)
